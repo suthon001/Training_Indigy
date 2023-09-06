@@ -1,0 +1,39 @@
+{
+  "id": "306cb17b-0651-4602-898d-ab3287b9a0e9",
+  "name": "ALProject4",
+  "publisher": "Default publisher",
+  "version": "1.0.0.1",
+  "brief": "",
+  "description": "",
+  "privacyStatement": "",
+  "EULA": "",
+  "help": "",
+  "url": "",
+  "logo": "",
+  "dependencies": [
+    {
+        "appId": "bb553e59-ec5c-4293-a319-1bd27bb39119",
+        "publisher": "Triple P Application Co., Ltd.",
+        "version": "22.0.0.3",
+        "name": "TPP Localization Pack2"
+    }
+  ],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "22.0.0.0",
+  "idRanges": [
+    {
+      "from": 50100,
+      "to": 50149
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": true
+  },
+  "runtime": "11.0",
+  "features": [
+    "NoImplicitWith"
+  ]
+}
