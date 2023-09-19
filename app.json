@@ -2,7 +2,7 @@
   "id": "306cb17b-0651-4602-898d-ab3287b9a0e9",
   "name": "ALProject4",
   "publisher": "Default publisher",
-  "version": "1.0.0.1",
+  "version": "1.0.0.2",
   "brief": "",
   "description": "",
   "privacyStatement": "",
@@ -32,7 +32,7 @@
     "allowDownloadingSource": false,
     "includeSourceInSymbolFile": true
   },
-  "runtime": "11.0",
+  "runtime": "10.0",
   "features": [
     "NoImplicitWith"
   ]

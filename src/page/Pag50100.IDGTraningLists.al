@@ -53,6 +53,17 @@ page 50100 "IDG Traning Lists"
                     REPORT.Run(REPORT::"Traning Report", true, true, TrainingHeader);
                 end;
             }
+            action(XML)
+            {
+                Caption = 'XML';
+                Image = XMLFile;
+                ApplicationArea = all;
+                PromotedCategory = Report;
+                Promoted = true;
+                RunObject = xmlport "Export Customer";
+
+            }
         }
     }
+
 }

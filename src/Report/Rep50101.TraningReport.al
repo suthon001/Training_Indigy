@@ -25,12 +25,51 @@ report 50101 "Traning Report"
             column(TotalQuantity; "Total Quantity")
             {
             }
-            dataitem("IDG Traning Line"; "IDG Traning Line")
+            dataitem(Integer; Integer)
             {
-                DataItemLink = "Document No." = field("Document No.");
-                column(Item_No_; "Item No.") { }
-                column(Quantity; Quantity) { }
+                DataItemTableView = sorting(Number);
+                column(Number; Number) { }
+                dataitem("IDG Traning Line"; "IDG Traning Line")
+                {
+                    DataItemTableView = sorting("Document No.", "Line No.");
+                    DataItemLink = "Document No." = field("Document No.");
+                    DataItemLinkReference = TraningHeader;
+                    column(Item_No_; "Item No.") { }
+                    column(Quantity; Quantity) { }
+                    trigger OnAfterGetRecord()
+                    begin
+
+                    end;
+
+                    trigger OnPreDataItem()
+                    begin
+
+                    end;
+
+                    trigger OnPostDataItem()
+                    begin
+
+                    end;
+                }
+                trigger OnPreDataItem()
+                begin
+                    SetRange(Number, 1, NoofCopies);
+                end;
             }
+            trigger OnAfterGetRecord()
+            begin
+
+            end;
+
+            trigger OnPreDataItem()
+            begin
+
+            end;
+
+            trigger OnPostDataItem()
+            begin
+
+            end;
         }
     }
     requestpage
@@ -42,9 +81,23 @@ report 50101 "Traning Report"
             {
                 group(GroupName)
                 {
+                    Caption = 'Options';
+                    field(NoofCopies; NoofCopies)
+                    {
+                        ApplicationArea = all;
+                        Caption = 'No of Copies.';
+                        MinValue = 0;
+                        MaxValue = 5;
+                    }
                 }
             }
         }
+        trigger OnInit()
+        begin
+            NoofCopies := 2;
+        end;
 
     }
+    var
+        NoofCopies: Integer;
 }

@@ -22,6 +22,10 @@ table 50101 "IDG Traning Line"
         {
             Caption = 'Quantity';
         }
+        field(9; "Car"; Enum Car)
+        {
+            Caption = 'Car';
+        }
     }
     keys
     {
