@@ -1,17 +1,24 @@
 codeunit 50100 "IDG Func"
 {
+
+
     [EventSubscriber(ObjectType::Codeunit, Codeunit::ReportManagement, 'OnAfterSubstituteReport', '', false, false)]
     local procedure OnAfterSubstituteReport(ReportId: Integer; var NewReportId: Integer)
     begin
         if ReportId = 101 then
             NewReportId := report::"IDG Customer Lists";
+        if ReportId = REPORT::"Customer - Top 10 List" then
+            NewReportId := REPORT::"IDG Customer - Top 10 List";
     end;
 
-    [EventSubscriber(ObjectType::Table, Database::"Sales Header", 'OnAfterLookupShipToCity', '', false, false)]
-    local procedure OnBeforeValidateShipToCode()
+    [EventSubscriber(ObjectType::Table, Database::"Sales Header", 'OnAfterOnInsert', '', false, false)]
+    local procedure OnAfterOnInsert(var SalesHeader: Record "Sales Header")
     begin
-
+        if SalesHeader."Business group Code" <> '' then
+            SalesHeader.Validate("Business group Code", SalesHeader."Business group Code");
     end;
+
+
 
     [EventSubscriber(ObjectType::Table, Database::"Traning Header", 'OnAfterLookupVendorNo', '', false, false)]
     local procedure OnAfterLookupVendorNo(pVendor: Record Vendor; var TrainingHEader: Record "Traning Header")
@@ -19,11 +26,126 @@ codeunit 50100 "IDG Func"
         TrainingHEader."Customer Name" := pVendor.Name;
     end;
 
-    procedure TEST()
+    procedure GetToken()
+    var
+        ltJsonToken, ltJsonToken2 : JsonToken;
+        ltJsonobject: JsonObject;
+        ltHttpContent: HttpContent;
+        ltHttpHeadersContent: HttpHeaders;
+        ltHttpRequestMessage: HttpRequestMessage;
+        ltHttpResponseMessage: HttpResponseMessage;
+        ltHttpClient: HttpClient;
+        ltUrlAddress, ResponText, BCToken : Text;
     begin
+
+        ltUrlAddress := 'https://login.microsoftonline.com/a0746c2e-942d-455a-83e4-26a96f7271bb/oauth2/v2.0/token';
+        ltHttpContent.WriteFrom('grant_type=client_credentials&client_id=8ae06a2d-e6f8-4cee-83be-0d3ff69d0214&client_secret=OOh8Q~1Q9~9LWczfrJl14Lnr.Bi~_d3MPul-vc-h&scope=https%3A%2F%2Fapi.businesscentral.dynamics.com%2F.default');
+        ltHttpContent.GetHeaders(ltHttpHeadersContent);
+        ltHttpHeadersContent.Remove('Content-Type');
+        ltHttpHeadersContent.Add('Content-Type', 'application/x-www-form-urlencoded');
+        ltHttpClient.Clear();
+        ltHttpClient.SetBaseAddress(ltUrlAddress);
+        ltHttpClient.Post(ltUrlAddress, ltHttpContent, ltHttpResponseMessage);
+        ltHttpResponseMessage.Content().ReadAs(ResponText);
+        ltJsonToken.ReadFrom(ResponText);
+        ltJsonobject := ltJsonToken.AsObject();
+        ltJsonobject.SelectToken('$.access_token', ltJsonToken2);
+        BCToken := ltJsonToken2.AsValue().AsText();
+        CreateSalesBlanket(BCToken);
+
 
     end;
 
+    procedure CreateSalesBlanket(pToken: text)
+    var
+        ltJsonobject, JsonObjectBuild : JsonObject;
+        ltJsonToken: JsonToken;
+        ltJsonArray: JsonArray;
+        ltHttpContent: HttpContent;
+        ltHttpHeadersContent, contentHeaders : HttpHeaders;
+        ltHttpRequestMessage: HttpRequestMessage;
+        ltHttpResponseMessage: HttpResponseMessage;
+        ltHttpClient: HttpClient;
+        Body, ltUrlAddress, ResponText : Text;
+    begin
+        ltJsonobject.Add('Type', 'Item');
+        ltJsonobject.Add('No', '1896-S');
+        ltJsonobject.Add('Location_Code', 'WEST');
+        ltJsonobject.Add('Quantity', 1);
+        ltJsonArray.Add(ltJsonobject);
+        JsonObjectBuild.Add('sellToCustomerNo', '30000');
+        JsonObjectBuild.Add('postingDate', 20230927D);
+        JsonObjectBuild.Add('blanketlines', ltJsonArray);
+        JsonObjectBuild.WriteTo(Body);
+
+
+        ltHttpHeadersContent := ltHttpClient.DefaultRequestHeaders();
+        ltHttpHeadersContent.Add('Authorization', 'Bearer ' + pToken);
+        ltHttpContent.WriteFrom(Body);
+        ltHttpContent.GetHeaders(contentHeaders);
+
+        contentHeaders.Clear();
+        contentHeaders.Add('Content-Type', 'application/json');
+        ltUrlAddress := 'https://api.businesscentral.dynamics.com/v2.0/a0746c2e-942d-455a-83e4-26a96f7271bb/In_Sandbox001/api/idg/bc/v1.0/salesbanketorders?$expand=blanketlines&company=Cronus';
+        ltHttpClient.Post(ltUrlAddress, ltHttpContent, ltHttpResponseMessage);
+        ltHttpResponseMessage.Content().ReadAs(ResponText);
+        ltJsonToken.ReadFrom(ResponText);
+        ltJsonobject := ltJsonToken.AsObject();
+
+    end;
+
+    procedure CallUserPassword()
+    var
+        Base64: Codeunit "Base64 Convert";
+        ltJsonobject, JsonObjectBuild : JsonObject;
+        ltJsonToken: JsonToken;
+        ltJsonArray: JsonArray;
+        ltHttpContent: HttpContent;
+        ltHttpHeadersContent, contentHeaders : HttpHeaders;
+        ltHttpRequestMessage: HttpRequestMessage;
+        ltHttpResponseMessage: HttpResponseMessage;
+        ltHttpClient: HttpClient;
+        Body, ltUrlAddress, ResponText, AuthString : Text;
+    begin
+
+        AuthString := StrSubstNo('%1:%2', 'User', 'Password');
+        AuthString := StrSubstNo('Basic ', Base64.ToBase64(AuthString));
+
+        ltJsonobject.Add('Type', 'Item');
+        ltJsonobject.Add('No', '1896-S');
+        ltJsonobject.Add('Location_Code', 'WEST');
+        ltJsonobject.Add('Quantity', 1);
+        ltJsonArray.Add(ltJsonobject);
+        JsonObjectBuild.Add('sellToCustomerNo', '30000');
+        JsonObjectBuild.Add('postingDate', 20230927D);
+        JsonObjectBuild.Add('blanketlines', ltJsonArray);
+        JsonObjectBuild.WriteTo(Body);
+
+        ltHttpHeadersContent := ltHttpClient.DefaultRequestHeaders();
+        ltHttpHeadersContent.Add('Authorization', AuthString);
+
+        ltHttpContent.WriteFrom(Body);
+        ltHttpContent.GetHeaders(contentHeaders);
+        contentHeaders.Clear();
+        contentHeaders.Add('Content-Type', 'application/json');
+        ltUrlAddress := 'https://api.businesscentral.dynamics.com/v2.0/a0746c2e-942d-455a-83e4-26a96f7271bb/In_Sandbox001/api/idg/bc/v1.0/salesbanketorders?$expand=blanketlines&company=Cronus';
+        ltHttpClient.Post(ltUrlAddress, ltHttpContent, ltHttpResponseMessage);
+        ltHttpResponseMessage.Content().ReadAs(ResponText);
+        ltJsonToken.ReadFrom(ResponText);
+        ltJsonobject := ltJsonToken.AsObject();
+
+
+
+
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales-Post", 'OnDeleteAfterPostingOnBeforeDeleteSalesHeader', '', false, false)]
+    local procedure OnDeleteAfterPostingOnBeforeDeleteSalesHeader(var SalesHeader: Record "Sales Header")
+    begin
+        if SalesHeader."Document Type" in [SalesHeader."Document Type"::Invoice, SalesHeader."Document Type"::"Credit Memo"] then
+            GetToken();
+
+    end;
 
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Sales-Post", 'OnInsertShipmentHeaderOnAfterTransferfieldsToSalesShptHeader', '', false, false)]
     local procedure OnInsertShipmentHeaderOnAfterTransferfieldsToSalesShptHeader(SalesHeader: Record "Sales Header"; var SalesShptHeader: Record "Sales Shipment Header")
